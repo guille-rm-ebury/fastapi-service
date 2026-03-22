@@ -1,0 +1,55 @@
+services:
+  fastapi-service-local-db:
+    image: postgres:16-alpine
+    container_name: fastapi-service-local-db
+    environment:
+      POSTGRES_USER: user_admin
+      POSTGRES_PASSWORD: pass_admin
+      POSTGRES_DB: fastapi_service_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user_admin -d fastapi_service_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5438:5432"
+    expose:
+      - 5438
+
+  fastapi-service-local-db-test:
+    image: postgres:16-alpine
+    container_name: fastapi-service-local-db-test
+    environment:
+      POSTGRES_USER: user_admin
+      POSTGRES_PASSWORD: pass_admin
+      POSTGRES_DB: fastapi_service_db_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user_admin -d fastapi_service_db_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5440:5432"
+
+  # --- DATABASE MANAGER ---
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - fastapi-service-local-db
+
+  fastapi-service:
+    build: .
+    container_name: fastapi-service
+    environment:
+      DATABASE_URL: postgresql://user_admin:pass_admin@fastapi-service-local-db:5432/fastapi_service_db
+    ports:
+      - "8000:8000"
+    depends_on:
+      fastapi-service-local-db:
+        condition: service_healthy
