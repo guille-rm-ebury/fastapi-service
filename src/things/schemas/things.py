@@ -12,8 +12,12 @@ class Thing(BaseModel):
 
 
 class ThingCreate(BaseModel):
-    name: str = Field(..., min_length=1, max_length=255, description="Name of the thing", examples=["My Thing"])
-    description: str | None = Field(None, description="Optional description of the thing", examples=["A useful thing"])
+    name: str = Field(
+        ..., min_length=1, max_length=255, description="Name of the thing", examples=["My Thing"]
+    )
+    description: str | None = Field(
+        None, description="Optional description of the thing", examples=["A useful thing"]
+    )
 
 
 class ThingRead(Thing):
@@ -21,5 +25,13 @@ class ThingRead(Thing):
 
 
 class ThingUpdate(BaseModel):
-    name: str | None = Field(default=None, min_length=1, max_length=255, description="New name for the thing", examples=["Updated Name"])
-    description: str | None = Field(None, description="New description for the thing", examples=["Updated description"])
+    name: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=255,
+        description="New name for the thing",
+        examples=["Updated Name"],
+    )
+    description: str | None = Field(
+        None, description="New description for the thing", examples=["Updated description"]
+    )

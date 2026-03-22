@@ -4,6 +4,12 @@ NON_EXISTENT_ID = "00000000-0000-0000-0000-000000000000"
 
 
 @pytest.mark.integration
+async def test_unauthorized_without_api_key(unauthenticated_client):
+    response = await unauthenticated_client.get("/things/")
+    assert response.status_code == 401
+
+
+@pytest.mark.integration
 async def test_create_thing(client):
     response = await client.post(
         "/things/",

@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from httpx import ASGITransport, AsyncClient
 
 from src.app import app
+from src.auth.api_key import API_KEY
 from src.database import get_db
 
 load_dotenv()
@@ -31,6 +32,19 @@ async def db():
 @pytest.fixture
 async def client(db):
     """HTTP test client with the db dependency overridden."""
+    app.dependency_overrides[get_db] = lambda: db
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test",
+        headers={"X-API-Key": API_KEY},
+    ) as c:
+        yield c
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+async def unauthenticated_client(db):
+    """HTTP test client without API key header."""
     app.dependency_overrides[get_db] = lambda: db
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         yield c

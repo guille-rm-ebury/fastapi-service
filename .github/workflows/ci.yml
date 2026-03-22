@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    env:
+      TEST_DATABASE_URL: postgresql://user_admin:pass_admin@localhost:5440/fastapi_service_db_test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Check linting
+        run: make lint
+
+      - name: Check formatting
+        run: make format-check
+
+      - name: Start test database
+        run: docker compose up -d --wait fastapi-service-local-db-test
+
+      - name: Run migrations on test database
+        run: make database-test-migrate
+
+      - name: Run unit tests
+        run: make test-unit
+
+      - name: Run integration tests
+        run: make test-integration
