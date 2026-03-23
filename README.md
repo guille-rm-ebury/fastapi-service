@@ -119,6 +119,8 @@ Open `http://localhost:5050` and connect with:
 
 | Field    | Value                      |
 |----------|----------------------------|
+| login    | `admin@admin.com`          |
+| Password | `admin`                    |
 | Host     | `fastapi-service-local-db` |
 | Port     | `5432`                     |
 | Database | `fastapi_service_db`       |
@@ -197,7 +199,7 @@ An `Item` represents a product or resource with the following fields:
    | `GET`    | `/items/`     | List all items           |
    | `GET`    | `/items/{id}` | Get an item by ID        |
    | `POST`   | `/items/`     | Create a new item        |
-   | `PATCH`  | `/items/{id}` | Partially update an item |
+   | `PUT`  | `/items/{id}`   | update an item           |
    | `DELETE` | `/items/{id}` | Delete an item           |
 
 6. **Register the router** — Mount the items router in `src/app.py`.

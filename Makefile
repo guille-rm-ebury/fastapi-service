@@ -66,7 +66,7 @@ pgadmin-start:
 
 # --- Migrations ---
 migration-create:
-	uv run alembic revision --autogenerate -m "$(name)"
+	uv run alembic revision -m "$(name)"
 
 # --- App ---
 app-start:
