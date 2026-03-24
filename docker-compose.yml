@@ -2,6 +2,7 @@ services:
   fastapi-service-local-db:
     image: postgres:16-alpine
     container_name: fastapi-service-local-db
+    restart: unless-stopped
     environment:
       POSTGRES_USER: user_admin
       POSTGRES_PASSWORD: pass_admin
@@ -15,6 +16,8 @@ services:
       - "5438:5432"
     expose:
       - 5438
+    volumes:
+      - fastapi-service-local-db-data:/var/lib/postgresql/data
 
   fastapi-service-local-db-test:
     image: postgres:16-alpine
@@ -53,3 +56,6 @@ services:
     depends_on:
       fastapi-service-local-db:
         condition: service_healthy
+
+volumes:
+  fastapi-service-local-db-data:
