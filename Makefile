@@ -30,7 +30,7 @@ help:
 	@echo "  Tests:"
 	@echo "    test                       Run all tests"
 	@echo "    test-unit                  Run unit tests"
-	@echo "    test-integration           Run integration tests"
+	@echo "    test-integration           Start test DB, migrate, run integration tests, and clean up"
 	@echo ""
 	@echo "  Linting & formatting:"
 	@echo "    lint                       Check for errors with ruff"
@@ -80,7 +80,13 @@ test-unit:
 	uv run --group test pytest tests/unit/
 
 test-integration:
-	uv run --group test pytest tests/integration/
+	docker compose up -d --wait fastapi-service-local-db-test
+	DATABASE_URL=postgresql://user_admin:pass_admin@localhost:5440/fastapi_service_db_test \
+	uv run alembic upgrade head
+	uv run --group test pytest tests/integration/; \
+	EXIT_CODE=$$?; \
+	docker compose down fastapi-service-local-db-test -v; \
+	exit $$EXIT_CODE
 
 # --- Linting & Formatting ---
 lint:

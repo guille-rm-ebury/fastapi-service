@@ -2,11 +2,12 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from src.auth.dependencies import verify_api_key
 from src.things.dependencies import get_things_service
 from src.things.schemas.things import ThingCreate, ThingRead, ThingUpdate
 from src.things.services.things import ThingsService
 
-router = APIRouter(prefix="/things", tags=["things"])
+router = APIRouter(prefix="/things", tags=["things"], dependencies=[Depends(verify_api_key)])
 
 
 @router.get(
@@ -48,7 +49,10 @@ async def create_thing(payload: ThingCreate, service: ThingsService = Depends(ge
     "/{thing_id}",
     response_model=ThingRead,
     summary="Update a thing",
-    description="Partially updates a thing by its UUID. Only provided fields are updated. Returns 404 if not found.",
+    description=(
+        "Partially updates a thing by its UUID. "
+        "Only provided fields are updated. Returns 404 if not found."
+    ),
     responses={404: {"description": "Thing not found"}},
 )
 async def update_thing(
