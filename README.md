@@ -16,6 +16,7 @@ A FastAPI service with PostgreSQL, Alembic migrations, and async database access
 - [Bonus Exercise 2 — GitHub Actions CI](#bonus-exercise-2)
 - [Bonus Exercise 3 — Concurrent external API calls with asyncio](#bonus-exercise-3)
 - [Bonus Exercise 4 — Add CORS middleware](#bonus-exercise-4)
+- [Bonus Exercise 5 — Persistent local database with Docker](#bonus-exercise-5)
 
 ---
 
@@ -424,4 +425,51 @@ Your task is to configure FastAPI's CORS middleware so the frontend can communic
 - CORS is enforced by the **browser**, not the server. The server always responds — it just includes (or omits) the `Access-Control-Allow-Origin` header. This is why you won't see a difference testing with `curl` or the `/docs` UI.
 - The middleware must be registered **before** any routes are included in the app.
 - `allow_credentials=True` is only needed if the frontend sends cookies or `Authorization` headers — it is not required here.
+
+---
+
+## Bonus Exercise 5
+
+### Persistent local database with Docker
+
+Currently, the local database container loses all its data whenever it is stopped, and it does not start automatically after a system reboot. Your task is to fix both problems by updating `docker-compose.yml`.
+
+#### Requirements
+
+1. **Restart policy** — Add a `restart: unless-stopped` policy to the `fastapi-service-local-db` service so the container starts automatically when Docker starts (e.g. after a system reboot) and stays running unless you explicitly stop it.
+
+2. **Named volume** — Declare a named volume `fastapi-service-local-db-data` at the top-level `volumes` key and mount it into the container at the PostgreSQL data directory (`/var/lib/postgresql/data`). This ensures data is preserved across container restarts and recreations.
+
+#### Expected result
+
+After applying the changes, the relevant service in `docker-compose.yml` should look similar to:
+
+```yaml
+services:
+  fastapi-service-local-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    volumes:
+      - fastapi-service-local-db-data:/var/lib/postgresql/data
+    # ... rest of the service config
+
+volumes:
+  fastapi-service-local-db-data:
+```
+
+#### Expected behaviour
+
+| Scenario | Before | After |
+|----------|--------|-------|
+| System reboot | Container stays stopped | Container starts automatically with Docker |
+| `docker compose stop` + `docker compose start` | Data is lost | Data is preserved |
+| `docker compose down` (without `-v`) | Data is lost | Data is preserved |
+| `docker compose down -v` | Data is lost | Data is lost (volumes explicitly removed) |
+
+#### Tips
+
+- `restart: unless-stopped` is preferred over `restart: always` because it respects a deliberate `docker compose stop` — the container will not restart automatically if you stopped it manually.
+- The test database (`fastapi-service-local-db-test`) is ephemeral by design — do **not** add persistence or a restart policy to it.
+- Run `docker compose down -v` to wipe all data and start fresh if needed during development.
+- If you already have an existing container without the volume, you will need to run `docker compose down` and `docker compose up -d` to recreate it with the new configuration.
 
