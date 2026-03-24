@@ -31,12 +31,6 @@ jobs:
       - name: Check formatting
         run: make format-check
 
-      - name: Start test database
-        run: docker compose up -d --wait fastapi-service-local-db-test
-
-      - name: Run migrations on test database
-        run: make database-test-migrate
-
       - name: Run unit tests
         run: make test-unit
 
