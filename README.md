@@ -17,6 +17,7 @@ A FastAPI service with PostgreSQL, Alembic migrations, and async database access
 - [Bonus Exercise 3 — Concurrent external API calls with asyncio](#bonus-exercise-3)
 - [Bonus Exercise 4 — Add CORS middleware](#bonus-exercise-4)
 - [Bonus Exercise 5 — Persistent local database with Docker](#bonus-exercise-5)
+- [Bonus Exercise 6 — Self-contained integration test command](#bonus-exercise-6)
 
 ---
 
@@ -472,4 +473,42 @@ volumes:
 - The test database (`fastapi-service-local-db-test`) is ephemeral by design — do **not** add persistence or a restart policy to it.
 - Run `docker compose down -v` to wipe all data and start fresh if needed during development.
 - If you already have an existing container without the volume, you will need to run `docker compose down` and `docker compose up -d` to recreate it with the new configuration.
+
+---
+
+## Bonus Exercise 6
+
+### Self-contained integration test command
+
+Right now, running integration tests requires several manual steps: start the test database, run migrations, execute the tests, and finally clean up the container. This is error-prone and easy to forget.
+
+Your task is to update the `test-integration` Makefile target so that it handles the full lifecycle automatically in a single command.
+
+#### Requirements
+
+Update the `test-integration` target in the `Makefile` so that it:
+
+1. **Starts the test database** — Bring up the `fastapi-service-local-db-test` container and wait until its healthcheck passes before continuing.
+2. **Runs migrations** — Apply all pending Alembic migrations against the test database.
+3. **Runs the integration tests** — Execute all tests under `tests/integration/`.
+4. **Cleans up** — Remove the test database container and its volume, **regardless of whether the tests passed or failed**.
+5. **Propagates the exit code** — The `make test-integration` command must exit with a non-zero code if any test fails, so CI pipelines can detect failures correctly.
+
+#### Expected behaviour
+
+```bash
+make test-integration
+# 1. Starts fastapi-service-local-db-test and waits for healthy status
+# 2. Runs: alembic upgrade head (against the test DB)
+# 3. Runs: pytest tests/integration/
+# 4. Removes the test DB container and volume
+# 5. Exits with pytest's exit code
+```
+
+#### Tips
+
+- Use `docker compose up -d --wait <service>` to start the container and block until its healthcheck passes — no need for a manual `sleep`.
+- In Make, use a shell `;` chain (not `&&`) combined with `exit $$EXIT_CODE` to ensure the cleanup step always runs even when pytest returns a non-zero code.
+- Capture pytest's exit code with `EXIT_CODE=$$?` immediately after the pytest command, before running cleanup.
+- The `$$` syntax in Makefiles is how you write a literal `$` in a shell variable reference (Make would otherwise interpret a single `$`).
 
